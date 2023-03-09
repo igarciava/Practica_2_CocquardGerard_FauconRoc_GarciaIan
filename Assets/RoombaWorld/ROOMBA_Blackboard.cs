@@ -18,6 +18,8 @@ public class ROOMBA_Blackboard : MonoBehaviour {
 
     public float currentCharge = 100;
 
+    public float patrolPointRadius = 500.0f;
+
     private TextMesh energyLine;
     
     public List<GameObject> memory; // list of detected dust units not picked due to presence of poo
