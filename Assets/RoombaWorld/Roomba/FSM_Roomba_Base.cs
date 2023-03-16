@@ -9,7 +9,7 @@ public class FSM_Roomba_Base : FiniteStateMachine
      * states and transitions and/or set in OnEnter or used in OnExit 
      * For instance: steering behaviours, blackboard, ...*/
     private ROOMBA_Blackboard blackboard;
-    private PathFeeder pathfeeder;
+    private GoToTarget goToTarget;
 
     public override void OnEnter()
     {
@@ -17,7 +17,7 @@ public class FSM_Roomba_Base : FiniteStateMachine
          * It's equivalent to the on enter action of any state 
          * Usually this code includes .GetComponent<...> invocations */
         blackboard = GetComponent<ROOMBA_Blackboard>();
-        pathfeeder = GetComponent<PathFeeder>();
+        goToTarget = GetComponent<GoToTarget>();
         base.OnEnter(); // do not remove
     }
 
@@ -37,43 +37,40 @@ public class FSM_Roomba_Base : FiniteStateMachine
 
         State Patrolling = new State("Patrolling",
             () => { 
-                pathfeeder.target = SensingUtils.FindRandomInstanceWithinRadius(gameObject, "Patrolpoint", blackboard.patrolPointRadius);
-                pathfeeder.enabled = true;
+                goToTarget.target = SensingUtils.FindRandomInstanceWithinRadius(gameObject, "PATROLPOINT", blackboard.patrolPointRadius);
+                goToTarget.enabled = true;
             }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
-            () => { 
-                pathfeeder.enabled = false;
-                pathfeeder.target = null;
+            () => {
+                goToTarget.enabled = false;
+                goToTarget.target = null;
             }  // write on exit logic inisde {}  
         );
 
 
         /* STAGE 2: create the transitions with their logic(s)
-         * ---------------------------------------------------
+         * ---------------------------------------------------*/
 
-        Transition varName = new Transition("TransitionName",
-            () => { }, // write the condition checkeing code in {}
+        Transition ToAnotherPatrolPoint = new Transition("ToAnotherPatrolPoint",
+            () => {
+                return goToTarget.routeTerminated();
+            }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
 
-        */
+
 
 
         /* STAGE 3: add states and transitions to the FSM 
-         * ----------------------------------------------
-            
-        AddStates(...);
+         * ----------------------------------------------*/
 
-        AddTransition(sourceState, transition, destinationState);
-
-         */
+        AddState(Patrolling);
+        AddTransition(Patrolling, ToAnotherPatrolPoint, Patrolling);
 
 
-        /* STAGE 4: set the initial state
-         
-        initialState = ... 
+        /* STAGE 4: set the initial state*/
 
-         */
+        initialState = Patrolling;
 
     }
 }
