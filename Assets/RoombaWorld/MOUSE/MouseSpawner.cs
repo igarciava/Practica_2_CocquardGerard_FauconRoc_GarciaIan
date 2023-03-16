@@ -21,7 +21,7 @@ public class MouseSpawner : MonoBehaviour
         timer += Time.deltaTime;
         if (timer > spawnTime)
         {
-            Instantiate(Resources.Load("MOUSE"), RandomLocationGenerator.RandomEnterExitLocation(), Quaternion.identity);
+            Instantiate(Resources.Load("MOUSE"), RandomLocationGenerator.RandomEnterExitLocation().transform.position, Quaternion.identity);
             timer = 0;
             spawnTime = Random.Range(minSpawnTime, maxSpawnTime);
         }

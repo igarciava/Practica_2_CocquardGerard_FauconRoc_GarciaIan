@@ -31,9 +31,9 @@ public class RandomLocationGenerator  {
     {
         return patrolPoints[Random.Range(0, patrolPoints.Count)].transform.position;
     }
-    public static Vector3 RandomEnterExitLocation()
+    public static GameObject RandomEnterExitLocation()
     {
-        return enterExitPoints[Random.Range(0, enterExitPoints.Count)].transform.position;
+        return enterExitPoints[Random.Range(0, enterExitPoints.Count)];
     }
 
 
