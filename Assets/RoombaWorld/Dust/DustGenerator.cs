@@ -4,18 +4,22 @@ using UnityEngine;
 
 public class DustGenerator : MonoBehaviour
 {
-    public GameObject Dust;
-    private RandomLocationGenerator Generator;
+    float timer = 0;
+    public float spawnTime = 5;
 
     // Start is called before the first frame update
     void Start()
     {
-        Generator = new RandomLocationGenerator();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        timer += Time.deltaTime;
+        if(timer > spawnTime)
+        {
+            Instantiate(Resources.Load("DUST"), RandomLocationGenerator.RandomWalkableLocation(), Quaternion.identity);
+            timer = 0;
+        }
     }
 }
