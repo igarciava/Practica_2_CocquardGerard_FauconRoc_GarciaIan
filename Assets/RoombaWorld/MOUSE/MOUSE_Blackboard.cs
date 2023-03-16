@@ -7,7 +7,6 @@ public class MOUSE_Blackboard : MonoBehaviour
     private GameObject[] exitPoints;
     public GameObject pooPrefab;
     public float roombaDetectionRadius = 50;
-    public GameObject surrogateTarget;
     public float closeEnoughToTarget = 1;
     public GameObject roomba;
        
@@ -16,7 +15,6 @@ public class MOUSE_Blackboard : MonoBehaviour
         // let's get all the exit&entry points
         exitPoints = GameObject.FindGameObjectsWithTag("ENTEREXITPOINTS");
         pooPrefab = Resources.Load<GameObject>("POO");
-        surrogateTarget.transform.parent = null;
         roomba = GameObject.FindGameObjectWithTag("ROOMBA");
     }
 

@@ -10,8 +10,12 @@ public class FSM_Mouse : FiniteStateMachine
      * For instance: steering behaviours, blackboard, ...*/
     GoToTarget goToTarget;
     MOUSE_Blackboard blackboard;
-    float elapsedTime = 0;
     ArrivePlusOA arrive;
+    GameObject targetToPoo;
+    SpriteRenderer spriteRenderer;
+    SteeringContext context;
+    float elapsedTime = 0;
+    
 
 
     public override void OnEnter()
@@ -22,6 +26,9 @@ public class FSM_Mouse : FiniteStateMachine
         goToTarget = GetComponent<GoToTarget>();
         blackboard = GetComponent<MOUSE_Blackboard>();
         arrive = GetComponent<ArrivePlusOA>();
+        targetToPoo = new GameObject();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        context = GetComponent<SteeringContext>();
         base.OnEnter(); // do not remove
     }
 
@@ -48,7 +55,7 @@ public class FSM_Mouse : FiniteStateMachine
 
          */
         State randomWalkablePoint = new State("RandomWalkablePoint",
-            () => { goToTarget.enabled = true; blackboard.surrogateTarget.transform.position = RandomLocationGenerator.RandomWalkableLocation(); goToTarget.target = blackboard.surrogateTarget; }, // write on enter logic inside {}
+            () => { goToTarget.enabled = true; targetToPoo.transform.position = RandomLocationGenerator.RandomWalkableLocation(); goToTarget.target = targetToPoo; }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
             () => { goToTarget.enabled = false; }  // write on exit logic inisde {}  
         );
@@ -64,7 +71,7 @@ public class FSM_Mouse : FiniteStateMachine
             () => { arrive.enabled = false; }  // write on exit logic inisde {}  
         );
         State scared = new State("Scared",
-            () => { arrive.enabled = true; arrive.target = blackboard.NearestExitPoint(); }, // write on enter logic inside {}
+            () => { arrive.enabled = true; arrive.target = blackboard.NearestExitPoint(); spriteRenderer.color = Color.green; context.maxSpeed*=2; context.maxAcceleration*=4; }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
             () => { arrive.enabled = false; }  // write on exit logic inisde {}  
         );
@@ -83,7 +90,7 @@ public class FSM_Mouse : FiniteStateMachine
 
         */
         Transition walkableToPoo = new Transition("WalkableToPoo",
-            () => { Debug.Log(goToTarget.target); return SensingUtils.DistanceToTarget(gameObject, goToTarget.target) < blackboard.closeEnoughToTarget; }, // write the condition checkeing code in {}
+            () => { return SensingUtils.DistanceToTarget(gameObject, targetToPoo) < blackboard.closeEnoughToTarget; }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
         Transition pooToExitRandom = new Transition("PooToExitRandom",
