@@ -18,7 +18,8 @@ public class DustGenerator : MonoBehaviour
         timer += Time.deltaTime;
         if(timer > spawnTime)
         {
-            Instantiate(Resources.Load("DUST"), RandomLocationGenerator.RandomWalkableLocation(), Quaternion.identity);
+            GameObject dust = (GameObject)Instantiate(Resources.Load("DUST"), RandomLocationGenerator.RandomWalkableLocation(), Quaternion.identity);
+            dust.GetComponent<SpriteRenderer>().color = Random.ColorHSV();
             timer = 0;
         }
     }

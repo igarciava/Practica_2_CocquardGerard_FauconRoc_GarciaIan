@@ -6,7 +6,8 @@ public class RandomLocationGenerator  {
 
     private static List<GraphNode> allNodes;
     private static List<GameObject> patrolPoints;
-    
+    private static List<GameObject> enterExitPoints;
+
     static RandomLocationGenerator ()
     {
         // get all the nodes in the gridgraph and save the walkable ones in allNodes list.
@@ -16,6 +17,7 @@ public class RandomLocationGenerator  {
 
         // get all the patrol points
         patrolPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("PATROLPOINT"));
+        enterExitPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("ENTEREXITPOINTS"));
     } 
 
     public static Vector3 RandomWalkableLocation ()
@@ -29,5 +31,10 @@ public class RandomLocationGenerator  {
     {
         return patrolPoints[Random.Range(0, patrolPoints.Count)].transform.position;
     }
+    public static Vector3 RandomEnterExitLocation()
+    {
+        return enterExitPoints[Random.Range(0, enterExitPoints.Count)].transform.position;
+    }
+
 
 }
