@@ -11,6 +11,7 @@ public class FSM_Roomba_Base : FiniteStateMachine
     private GoToTarget goToTarget;
     private GameObject theDust;
     private GameObject theLastDust;
+    private GameObject thePoo;
 
     public override void OnEnter()
     {
@@ -45,8 +46,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () => { }, // write in state logic inside {}
             () =>
             {
-                goToTarget.enabled = false;
                 goToTarget.target = null;
+                goToTarget.enabled = false;
             }  // write on exit logic inisde {}  
         );
 
@@ -59,15 +60,38 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () => { }, // write in state logic inside {}
             () =>
             {
-                goToTarget.enabled = false;
                 goToTarget.target = null;
+                goToTarget.enabled = false;
             }  // write on exit logic inisde {}  
         );
 
-        State Cleaning = new State("Cleaning",
+        State GoingToPoo = new State("GoingToPoo",
+            () =>
+            {
+                goToTarget.target = thePoo;
+                goToTarget.enabled = true;
+            }, // write on enter logic inside {}
+            () => { }, // write in state logic inside {}
+            () =>
+            {
+                goToTarget.target = null;
+                goToTarget.enabled = false;
+            }  // write on exit logic inisde {}  
+        );
+
+        State CleaningTheDust = new State("CleaningTheDust",
             () =>
             {
                 Destroy(theLastDust);
+            }, // write on enter logic inside {}
+            () => { }, // write in state logic inside {}
+            () => { }  // write on exit logic inisde {}  
+        );
+
+        State CleaningThePoo = new State("CleaningThePoo",
+            () =>
+            {
+                Destroy(thePoo);
             }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
             () => { }  // write on exit logic inisde {}  
@@ -77,7 +101,7 @@ public class FSM_Roomba_Base : FiniteStateMachine
         /* STAGE 2: create the transitions with their logic(s)
          * ---------------------------------------------------*/
 
-        Transition RouteTerminated = new Transition("ToAnotherPatrolPoint",
+        Transition RouteTerminated = new Transition("RouteTerminated",
             () =>
             {
                 return goToTarget.routeTerminated();
@@ -96,10 +120,19 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
 
-        Transition DustReached = new Transition("DustReached",
+        Transition PooDetected = new Transition("PooDetected",
             () =>
             {
-                return SensingUtils.DistanceToTarget(gameObject, theLastDust) < blackboard.dustReachedRadius;
+                thePoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.pooDetectionRadius);
+                return SensingUtils.DistanceToTarget(gameObject, thePoo) < blackboard.pooDetectionRadius;
+            }, // write the condition checkeing code in {}
+            () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
+        );
+
+        Transition PassTransition = new Transition("PassTransition",
+            () =>
+            {
+                return true;
             }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
@@ -108,12 +141,18 @@ public class FSM_Roomba_Base : FiniteStateMachine
         /* STAGE 3: add states and transitions to the FSM 
          * ----------------------------------------------*/
 
-        AddStates(Patrolling, GoingToDust, Cleaning);
-        AddTransition(Patrolling, RouteTerminated, Patrolling);
-        AddTransition(Patrolling, DustDetected, GoingToDust);
-        AddTransition(GoingToDust, DustReached, Cleaning);
-        AddTransition(Cleaning, RouteTerminated, Patrolling);
+        AddStates(Patrolling, GoingToDust, GoingToPoo, CleaningTheDust, CleaningThePoo);
 
+        AddTransition(Patrolling, RouteTerminated, Patrolling);
+
+        AddTransition(Patrolling, DustDetected, GoingToDust);
+        AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
+        AddTransition(CleaningTheDust, PassTransition, Patrolling);
+
+        AddTransition(Patrolling, PooDetected, GoingToPoo);
+        AddTransition(GoingToDust, PooDetected, GoingToPoo);
+        AddTransition(GoingToPoo, RouteTerminated, CleaningThePoo);
+        AddTransition(CleaningThePoo, PassTransition, Patrolling);
 
         /* STAGE 4: set the initial state*/
 
