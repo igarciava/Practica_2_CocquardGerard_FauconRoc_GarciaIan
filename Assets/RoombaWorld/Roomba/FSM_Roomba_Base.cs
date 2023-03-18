@@ -1,5 +1,6 @@
 using FSMs;
 using UnityEngine;
+using Steerings;
 
 [CreateAssetMenu(fileName = "FSM_Roomba_Base", menuName = "Finite State Machines/FSM_Roomba_Base", order = 1)]
 public class FSM_Roomba_Base : FiniteStateMachine
@@ -9,9 +10,11 @@ public class FSM_Roomba_Base : FiniteStateMachine
      * For instance: steering behaviours, blackboard, ...*/
     private ROOMBA_Blackboard blackboard;
     private GoToTarget goToTarget;
+    private SteeringContext context;
     private GameObject theDust;
     private GameObject theLastDust;
     private GameObject thePoo;
+
 
     public override void OnEnter()
     {
@@ -20,6 +23,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
          * Usually this code includes .GetComponent<...> invocations */
         blackboard = GetComponent<ROOMBA_Blackboard>();
         goToTarget = GetComponent<GoToTarget>();
+        context = GetComponent<SteeringContext>();
+
         base.OnEnter(); // do not remove
     }
 
@@ -68,6 +73,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
         State GoingToPoo = new State("GoingToPoo",
             () =>
             {
+                context.maxSpeed *= 2.0f;
+                context.maxAcceleration *= 4.0f;
                 goToTarget.target = thePoo;
                 goToTarget.enabled = true;
             }, // write on enter logic inside {}
@@ -76,6 +83,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
             {
                 goToTarget.target = null;
                 goToTarget.enabled = false;
+                context.maxSpeed /= 2.0f;
+                context.maxAcceleration /= 4.0f;
             }  // write on exit logic inisde {}  
         );
 
@@ -137,6 +146,24 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
 
+        Transition CloserPoo = new Transition("CloserPoo",
+            () =>
+            {
+                GameObject closerPoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.pooDetectionRadius);
+                if (SensingUtils.DistanceToTarget(gameObject, closerPoo) < SensingUtils.DistanceToTarget(gameObject, thePoo))
+                {
+                    thePoo = closerPoo;
+                    return true;
+                }
+                else
+                {
+                    closerPoo = null;
+                    return false;
+                }
+            }, // write the condition checkeing code in {}
+            () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
+        );
+
 
         /* STAGE 3: add states and transitions to the FSM 
          * ----------------------------------------------*/
@@ -145,12 +172,13 @@ public class FSM_Roomba_Base : FiniteStateMachine
 
         AddTransition(Patrolling, RouteTerminated, Patrolling);
 
-        AddTransition(Patrolling, DustDetected, GoingToDust);
-        AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
-        AddTransition(CleaningTheDust, PassTransition, Patrolling);
+        //AddTransition(Patrolling, DustDetected, GoingToDust);
+        //AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
+        //AddTransition(CleaningTheDust, PassTransition, Patrolling);
 
         AddTransition(Patrolling, PooDetected, GoingToPoo);
         AddTransition(GoingToDust, PooDetected, GoingToPoo);
+        AddTransition(GoingToPoo, CloserPoo, GoingToPoo);
         AddTransition(GoingToPoo, RouteTerminated, CleaningThePoo);
         AddTransition(CleaningThePoo, PassTransition, Patrolling);
 

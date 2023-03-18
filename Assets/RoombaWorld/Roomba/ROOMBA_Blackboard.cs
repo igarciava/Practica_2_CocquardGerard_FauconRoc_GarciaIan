@@ -5,7 +5,8 @@ using UnityEngine;
 public class ROOMBA_Blackboard : MonoBehaviour {
 
     public float dustDetectionRadius = 60;  // radius for dust detection   
-    public float pooDetectionRadius = 150;   // radius for poo detection    
+    public float pooDetectionRadius = 150;   // radius for poo detection
+    public float chargeStationDetectionRadius = 250;   // radius for charge station detection
 
     public float dustReachedRadius = 5; // reachability radius
     public float pooReachedRadius = 5;  // reachability radius

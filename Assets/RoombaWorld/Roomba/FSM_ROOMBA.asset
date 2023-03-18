@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f613ae605d0d7f4890dc2804ecaab7e, type: 3}
-  m_Name: FSM_Roomba_Base
+  m_Script: {fileID: 11500000, guid: f36c29f86d4dd3742848e5c7e079a45a, type: 3}
+  m_Name: FSM_ROOMBA
   m_EditorClassIdentifier: 

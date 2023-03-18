@@ -206,7 +206,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 111757782}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -74.3, y: 70.6, z: 0}
+  m_LocalPosition: {x: 153.2, y: -42.5, z: 0}
   m_LocalScale: {x: 2.5, y: 2.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -227,6 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dustDetectionRadius: 60
   pooDetectionRadius: 150
+  chargeStationDetectionRadius: 150
   dustReachedRadius: 5
   pooReachedRadius: 5
   chargingStationReachedRadius: 2
@@ -234,7 +235,7 @@ MonoBehaviour:
   energyRechargePerSecond: 15
   minCharge: 15
   maxCharge: 99
-  currentCharge: 100
+  currentCharge: 20
   patrolPointRadius: 500
   memory: []
 --- !u!114 &111757792
@@ -318,7 +319,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 823459bfcabf59e4bbb7d30c1033e0ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fsm: {fileID: 11400000, guid: 291783995fd948a41b0adb1cddceb013, type: 2}
+  fsm: {fileID: 11400000, guid: 75f900a336e90e244abb39cf7f0c8e83, type: 2}
   currentState: 
   textMesh: {fileID: 0}
 --- !u!114 &111757795
