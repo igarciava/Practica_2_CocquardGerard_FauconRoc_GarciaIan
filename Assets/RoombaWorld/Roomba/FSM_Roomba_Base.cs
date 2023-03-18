@@ -12,7 +12,6 @@ public class FSM_Roomba_Base : FiniteStateMachine
     private GoToTarget goToTarget;
     private SteeringContext context;
     private GameObject theDust;
-    private GameObject theLastDust;
     private GameObject thePoo;
 
 
@@ -59,7 +58,7 @@ public class FSM_Roomba_Base : FiniteStateMachine
         State GoingToDust = new State("GoingToDust",
             () =>
             {
-                goToTarget.target = theLastDust;
+                goToTarget.target = theDust;
                 goToTarget.enabled = true;
             }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
@@ -91,7 +90,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
         State CleaningTheDust = new State("CleaningTheDust",
             () =>
             {
-                Destroy(theLastDust);
+                blackboard.RetrieveFromMemory();
+                Destroy(theDust);
             }, // write on enter logic inside {}
             () => { }, // write in state logic inside {}
             () => { }  // write on exit logic inisde {}  
@@ -123,8 +123,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
             {
                 theDust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.dustDetectionRadius);
                 blackboard.AddToMemory(theDust);
-                theLastDust = blackboard.RetrieveFromMemory();
-                return SensingUtils.DistanceToTarget(gameObject, theLastDust) < blackboard.dustDetectionRadius;
+                //theLastDust = blackboard.RetrieveFromMemory();
+                return SensingUtils.DistanceToTarget(gameObject, theDust) < blackboard.dustDetectionRadius;
             }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
@@ -172,9 +172,9 @@ public class FSM_Roomba_Base : FiniteStateMachine
 
         AddTransition(Patrolling, RouteTerminated, Patrolling);
 
-        //AddTransition(Patrolling, DustDetected, GoingToDust);
-        //AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
-        //AddTransition(CleaningTheDust, PassTransition, Patrolling);
+        AddTransition(Patrolling, DustDetected, GoingToDust);
+        AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
+        AddTransition(CleaningTheDust, PassTransition, Patrolling);
 
         AddTransition(Patrolling, PooDetected, GoingToPoo);
         AddTransition(GoingToDust, PooDetected, GoingToPoo);
