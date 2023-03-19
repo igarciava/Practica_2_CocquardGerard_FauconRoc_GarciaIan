@@ -23,6 +23,7 @@ public class ROOMBA_Blackboard : MonoBehaviour {
 
     private TextMesh energyLine;
     
+    
     public List<GameObject> memory; // list of detected dust units not picked due to presence of poo
                                     // or other events
 

@@ -78,9 +78,8 @@ public class FSM_ROOMBA : FiniteStateMachine
         Transition NeedToCharge = new Transition("NeedToCharge",
             () =>
             {
-                if (blackboard.currentCharge < blackboard.minCharge)
-                    return true;
-                return false;
+                if (blackboard.currentCharge < blackboard.minCharge) return true;
+                else return false;
             }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );

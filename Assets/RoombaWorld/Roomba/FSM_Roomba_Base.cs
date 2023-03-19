@@ -13,6 +13,9 @@ public class FSM_Roomba_Base : FiniteStateMachine
     private SteeringContext context;
     private GameObject theDust;
     private GameObject thePoo;
+    float maxSpeed;
+    float maxAcceleration;
+    
 
 
     public override void OnEnter()
@@ -23,7 +26,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
         blackboard = GetComponent<ROOMBA_Blackboard>();
         goToTarget = GetComponent<GoToTarget>();
         context = GetComponent<SteeringContext>();
-
+        maxSpeed = context.maxSpeed;
+        maxAcceleration = context.maxAcceleration;
         base.OnEnter(); // do not remove
     }
 
@@ -33,6 +37,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
          * It's equivalent to the on exit action of any state 
          * Usually this code turns off behaviours that shouldn't be on when one the FSM has
          * been exited. */
+        context.maxSpeed = maxSpeed;
+        context.maxAcceleration = maxAcceleration;
         DisableAllSteerings();
         base.OnExit();
     }
@@ -72,18 +78,20 @@ public class FSM_Roomba_Base : FiniteStateMachine
         State GoingToPoo = new State("GoingToPoo",
             () =>
             {
-                context.maxSpeed *= 2.0f;
-                context.maxAcceleration *= 4.0f;
+                context.maxSpeed *= 1.3f;
+                context.maxAcceleration *= 2.6f;
                 goToTarget.target = thePoo;
                 goToTarget.enabled = true;
             }, // write on enter logic inside {}
-            () => { }, // write in state logic inside {}
+            () => { GameObject dust = SensingUtils.FindInstanceWithinRadius(gameObject,"DUST",blackboard.dustDetectionRadius);
+                    if(dust != null) blackboard.AddToMemory(dust);
+                  }, // write in state logic inside {}
             () =>
             {
                 goToTarget.target = null;
                 goToTarget.enabled = false;
-                context.maxSpeed /= 2.0f;
-                context.maxAcceleration /= 4.0f;
+                context.maxSpeed /= 1.3f;
+                context.maxAcceleration /= 2.6f;
             }  // write on exit logic inisde {}  
         );
 
@@ -122,9 +130,8 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () =>
             {
                 theDust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.dustDetectionRadius);
-                blackboard.AddToMemory(theDust);
-                //theLastDust = blackboard.RetrieveFromMemory();
-                return SensingUtils.DistanceToTarget(gameObject, theDust) < blackboard.dustDetectionRadius;
+                if(theDust != null) return SensingUtils.DistanceToTarget(gameObject, theDust) < blackboard.dustDetectionRadius;
+                else return false;
             }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
@@ -133,35 +140,42 @@ public class FSM_Roomba_Base : FiniteStateMachine
             () =>
             {
                 thePoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.pooDetectionRadius);
-                return SensingUtils.DistanceToTarget(gameObject, thePoo) < blackboard.pooDetectionRadius;
+                if(thePoo != null) return SensingUtils.DistanceToTarget(gameObject, thePoo) < blackboard.pooDetectionRadius;
+                else return false;
+            }, // write the condition checkeing code in {}
+            () => { if(theDust != null) blackboard.AddToMemory(theDust);
+                    theDust = null;
+                  }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
+        );
+        Transition AnyToPatrol = new Transition("PassTransition",
+            () =>
+            {
+                GameObject closerPoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.pooDetectionRadius);
+                bool memo = blackboard.somethingInMemory();
+                return !memo && !closerPoo;
             }, // write the condition checkeing code in {}
             () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
-
-        Transition PassTransition = new Transition("PassTransition",
+        Transition SomethingOnMemo = new Transition("PassTransition",
             () =>
             {
-                return true;
+                return blackboard.somethingInMemory();
             }, // write the condition checkeing code in {}
-            () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
+            () => { theDust = blackboard.RetrieveFromMemory(); }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
 
         Transition CloserPoo = new Transition("CloserPoo",
             () =>
             {
                 GameObject closerPoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.pooDetectionRadius);
-                if (SensingUtils.DistanceToTarget(gameObject, closerPoo) < SensingUtils.DistanceToTarget(gameObject, thePoo))
+                if (thePoo != closerPoo)
                 {
                     thePoo = closerPoo;
                     return true;
                 }
-                else
-                {
-                    closerPoo = null;
-                    return false;
-                }
+                else return false;
             }, // write the condition checkeing code in {}
-            () => { }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
+            () => {  }  // write the on trigger code in {} if any. Remove line if no on trigger action needed
         );
 
 
@@ -171,16 +185,18 @@ public class FSM_Roomba_Base : FiniteStateMachine
         AddStates(Patrolling, GoingToDust, GoingToPoo, CleaningTheDust, CleaningThePoo);
 
         AddTransition(Patrolling, RouteTerminated, Patrolling);
-
-        AddTransition(Patrolling, DustDetected, GoingToDust);
-        AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
-        AddTransition(CleaningTheDust, PassTransition, Patrolling);
-
         AddTransition(Patrolling, PooDetected, GoingToPoo);
+        AddTransition(Patrolling, DustDetected, GoingToDust);
+        
         AddTransition(GoingToDust, PooDetected, GoingToPoo);
+        AddTransition(GoingToDust, RouteTerminated, CleaningTheDust);
+        AddTransition(CleaningTheDust, AnyToPatrol, Patrolling);
+        AddTransition(CleaningTheDust, SomethingOnMemo, GoingToDust);
+        
         AddTransition(GoingToPoo, CloserPoo, GoingToPoo);
         AddTransition(GoingToPoo, RouteTerminated, CleaningThePoo);
-        AddTransition(CleaningThePoo, PassTransition, Patrolling);
+        AddTransition(CleaningThePoo, AnyToPatrol, Patrolling);
+        AddTransition(CleaningThePoo, SomethingOnMemo, GoingToDust);
 
         /* STAGE 4: set the initial state*/
 
